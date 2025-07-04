@@ -7,7 +7,10 @@ import { gsap } from "gsap";
 
 export async function fetchMemo(){
 
-  const {data, error} = await supabase.from('memo').select()
+  const {data, error} = await supabase
+  .from('memo')
+  .select()
+  .order('position', {ascending:true})
 
   main.innerHTML = '';
   
@@ -23,21 +26,23 @@ export async function deleteMemo(id:number){
   .eq('id', id)
 
   fetchMemo();
-  
+  sortMemo();
 }
 
 export async function insertMemo({
   title, 
   description, 
-  priority
-}:Pick<Tables<'memo'>, 'title'| 'description' | 'priority'>){
+  priority,
+  position
+}:Pick<Tables<'memo'>, 'title'| 'description' | 'priority' | 'position'>){
 
   const  {error} = await supabase
   .from('memo')
   .insert({
     title,
     description,
-    priority
+    priority,
+    position
   })
 
   fetchMemo();
@@ -45,4 +50,15 @@ export async function insertMemo({
     const tl = gsap.timeline()
   .to('.pop', {y:'100%', ease:'power3.inOut'})
   .to('#dialog', {autoAlpha:0, duration:0.2})
+}
+
+export function sortMemo(){
+  const sortedItems = document.querySelectorAll('article');
+
+  sortedItems.forEach(async(insertMemo, index) => {
+    await supabase
+    .from('memo')
+    .update({position:index})
+    .eq('id', Number(insertMemo.dataset.id)!);
+  })
 }
